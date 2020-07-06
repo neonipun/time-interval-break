@@ -1,11 +1,14 @@
 from plyer import notification
+from pync import Notifier
 import argparse
 import os 
+import platform
 import sys
 import time
 
 # https://www.iconsdb.com/green-icons/time-icon.html
 app_icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), "time-32.ico")
+platform_system = platform.system()
 
 def time_in_seconds(t):
     try:
@@ -31,7 +34,12 @@ break_time = time_in_seconds(args.break_time)
 title = f"Time Interval Break for {args.break_time}"
 while args.intervals:
     time.sleep(time_interval)
-    notification.notify(title=title, message=args.message, app_icon=app_icon, timeout=min(60, break_time+10))
-    time.sleep(break_time)
+    if platform_system == 'Darwin':
+        Notifier.notify(args.message, title=title, group=os.getpid())
+        time.sleep(break_time)
+        Notifier.remove(os.getpid())
+    else:
+        notification.notify(title=title, message=args.message, app_icon=app_icon, timeout=min(60, break_time+10))
+        time.sleep(break_time)
     args.intervals -= 1
     print(f"{args.message}: {args.intervals} more intervals to go!. Time: {time.strftime('%I:%M:%S %p', time.localtime())}")
